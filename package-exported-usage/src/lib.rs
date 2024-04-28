@@ -1,7 +1,12 @@
 #![deny(clippy::all)]
 // use std::path::Path;
+use rayon::prelude::*;
 
-use std::{collections::HashMap, fs::read_to_string, sync::Arc};
+use std::{
+  collections::HashMap,
+  fs::read_to_string,
+  sync::{Arc, Mutex},
+};
 
 use swc_core::{
   common::{input, FileName, SourceFile, SourceMap, Spanned},
@@ -58,15 +63,19 @@ pub fn inspect_package_usage(package_name: String, workspace: String) {
 
   let glob = Glob::new(&pattern).unwrap();
 
-  let mut map = HashMap::<String, usize>::new();
+  let map = Arc::new(Mutex::new(HashMap::<String, usize>::new()));
 
-  for entry in glob
+  let entries = glob
     .walk(workspace)
     .not(["**/node_modules/**", "**/*.d.ts"])
-    .unwrap()
-  {
-    let e = entry.unwrap();
+    .unwrap();
 
+  let num_cpus = num_cpus::get();
+
+  println!("num_cpus: {:?}", num_cpus);
+
+  entries.par_bridge().for_each(|entry| {
+    let e = entry.unwrap();
     let path = e.path();
 
     let cm = Arc::<SourceMap>::default();
@@ -108,6 +117,7 @@ pub fn inspect_package_usage(package_name: String, workspace: String) {
         };
 
         module_result.visit_with(&mut import_controller);
+        let mut map = map.lock().unwrap();
         for import in import_controller.imports {
           *map.entry(import).or_insert(0) += 1;
         }
@@ -116,7 +126,8 @@ pub fn inspect_package_usage(package_name: String, workspace: String) {
         println!("Error: {:?}", error);
       }
     }
-  }
+  });
+
   println!("---> {:?}", map);
 
   println!("package-exported-usage");

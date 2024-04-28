@@ -13,6 +13,8 @@ napi-derive = "2.12.2"
 swc_core = {version="0.91.1",features = ["ecma_plugin_transform","__parser"] }
 swc_ecmascript = { version = "0.240.0", features = ["parser", "codegen", "visit"] }
 wax = "0.6.0"
+rayon = "1.10"
+num_cpus = "1.13.0"
 
 [build-dependencies]
 napi-build = "2.0.1"
