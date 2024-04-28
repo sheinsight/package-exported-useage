@@ -1,0 +1,18 @@
+{
+  "name": "@shined/package-exported-usage-linux-arm-musleabihf",
+  "version": "0.0.0",
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "arm"
+  ],
+  "main": "package-exported-usage.linux-arm-musleabihf.node",
+  "files": [
+    "package-exported-usage.linux-arm-musleabihf.node"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">= 10"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "name": "@shined/package-exported-usage-linux-arm-gnueabihf",
+  "version": "0.0.0",
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "arm"
+  ],
+  "main": "package-exported-usage.linux-arm-gnueabihf.node",
+  "files": [
+    "package-exported-usage.linux-arm-gnueabihf.node"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">= 10"
+  }
+}

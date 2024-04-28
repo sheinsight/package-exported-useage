@@ -1,0 +1,22 @@
+[package]
+edition = "2021"
+name = "shined_package-exported-usage"
+version = "0.0.0"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+# Default enable napi4 feature, see https://nodejs.org/api/n-api.html#node-api-version-matrix
+napi = { version = "2.12.2", default-features = false, features = ["napi4"] }
+napi-derive = "2.12.2"
+swc_core = {version="0.91.1",features = ["ecma_plugin_transform","__parser"] }
+swc_ecmascript = { version = "0.240.0", features = ["parser", "codegen", "visit"] }
+wax = "0.6.0"
+
+[build-dependencies]
+napi-build = "2.0.1"
+
+[profile.release]
+lto = true
+strip = "symbols"
