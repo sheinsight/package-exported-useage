@@ -1,64 +1,37 @@
 #![deny(clippy::all)]
-// use std::path::Path;
-use rayon::prelude::*;
 
+use crate::vistor::ImportVisitor;
+use napi::Result as NapiResult;
+use rayon::prelude::*;
+use serde_json::json;
 use std::{
   collections::HashMap,
   fs::read_to_string,
   sync::{Arc, Mutex},
 };
-
 use swc_core::{
-  common::{input, FileName, SourceFile, SourceMap, Spanned},
-  ecma::parser::{lexer::Lexer, EsConfig, StringInput, Syntax},
+  common::{FileName, SourceMap},
+  ecma::parser::{lexer::Lexer, StringInput, Syntax},
 };
-
-use swc_ecmascript::{
-  ast::{ImportDecl, ImportSpecifier},
-  visit::Visit,
-};
-
 use swc_ecmascript::{
   ast::EsVersion,
   parser::{Parser, TsConfig},
-  visit::{VisitAllWith, VisitWith},
+  visit::VisitWith,
 };
 use wax::Glob;
+
+mod vistor;
 
 #[macro_use]
 extern crate napi_derive;
 
-struct ImportVisitor {
-  imports: Vec<String>,
-  package_name: String,
-}
-
-impl Visit for ImportVisitor {
-  fn visit_import_decl(&mut self, n: &ImportDecl) {
-    if n.src.value == self.package_name {
-      for specifier in &n.specifiers {
-        match specifier {
-          ImportSpecifier::Named(named) => {
-            self.imports.push(named.local.sym.to_string());
-          }
-          ImportSpecifier::Default(default) => {
-            self.imports.push(default.local.sym.to_string());
-          }
-          ImportSpecifier::Namespace(namespace) => {
-            self.imports.push(namespace.local.sym.to_string());
-          }
-        }
-
-        // self.imports.push(specifier.clone());
-      }
-    }
-  }
-}
-
 static PATTERN: &str = "**/*.{js,ts,jsx,tsx}";
 
 #[napi]
-pub fn inspect_package_usage(package_name: String, workspace: String) {
+pub fn inspect_package_usage(
+  package_name: String,
+  workspace: String,
+) -> NapiResult<serde_json::Value> {
   let glob = Glob::new(PATTERN).unwrap();
 
   let map = Arc::new(Mutex::new(HashMap::<String, usize>::new()));
@@ -67,10 +40,6 @@ pub fn inspect_package_usage(package_name: String, workspace: String) {
     .walk(workspace)
     .not(["**/node_modules/**", "**/*.d.ts"])
     .unwrap();
-
-  let num_cpus = num_cpus::get();
-
-  println!("num_cpus: {:?}", num_cpus);
 
   entries.par_bridge().for_each(|entry| {
     let e = entry.unwrap();
@@ -113,7 +82,6 @@ pub fn inspect_package_usage(package_name: String, workspace: String) {
           package_name: package_name.clone(),
           imports: vec![],
         };
-
         module_result.visit_with(&mut import_controller);
         let mut map = map.lock().unwrap();
         for import in import_controller.imports {
@@ -126,7 +94,7 @@ pub fn inspect_package_usage(package_name: String, workspace: String) {
     }
   });
 
-  println!("---> {:?}", map.lock().unwrap());
+  let cloned_map = map.lock().unwrap().clone();
 
-  println!("package-exported-usage");
+  Ok(json!(cloned_map))
 }
