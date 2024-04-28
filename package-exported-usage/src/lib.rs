@@ -55,13 +55,11 @@ impl Visit for ImportVisitor {
   }
 }
 
+static PATTERN: &str = "**/*.{js,ts,jsx,tsx}";
+
 #[napi]
 pub fn inspect_package_usage(package_name: String, workspace: String) {
-  let pattern = "**/*.{js,ts,jsx,tsx}";
-
-  println!("{:?}", pattern);
-
-  let glob = Glob::new(&pattern).unwrap();
+  let glob = Glob::new(PATTERN).unwrap();
 
   let map = Arc::new(Mutex::new(HashMap::<String, usize>::new()));
 
@@ -128,7 +126,7 @@ pub fn inspect_package_usage(package_name: String, workspace: String) {
     }
   });
 
-  println!("---> {:?}", map);
+  println!("---> {:?}", map.lock().unwrap());
 
   println!("package-exported-usage");
 }
