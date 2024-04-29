@@ -5,7 +5,6 @@ use napi::Result as NapiResult;
 use rayon::prelude::*;
 use serde_json::json;
 use std::{
-  collections::HashMap,
   fs::read_to_string,
   sync::{Arc, Mutex},
 };

@@ -3,8 +3,6 @@ use swc_ecmascript::{
   visit::Visit,
 };
 
-use crate::usage::PackageExportedUsage;
-
 pub struct ImportVisitor {
   pub imports: Vec<String>,
   pub package_name: String,
