@@ -1,15 +1,18 @@
 import test from 'ava'
 import { performance } from 'perf_hooks';
 import { inspectPackageUsage} from '../index.js'
- 
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 
-test('xx', (t) => {
+test('should to be array of len is 4', (t) => {
   const start = performance.now()
-  const res = inspectPackageUsage("shineout","/Users/10015448/GitRepository/fsp-front");
-  console.log(res);
+  const res = inspectPackageUsage("shineout",path.join(__dirname,"fixtures"));
   const end = performance.now()
   console.log(`inspectPackageUsage cost ${end - start} ms`);
-  console.log("xx");
-
+  t.is(res.length, 4);
 })
