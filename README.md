@@ -1,5 +1,6 @@
-# @shined/package-exported-useage
+# @shined/package-exported-useage 
 
+[![CI](https://github.com/sheinsight/package-exported-useage/actions/workflows/CI.yml/badge.svg)](https://github.com/sheinsight/package-exported-useage/actions/workflows/CI.yml)
 
 Used to count the usage of exported modules in a specific package.
 
