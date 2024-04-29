@@ -18,8 +18,10 @@ use swc_ecmascript::{
   parser::{Parser, TsConfig},
   visit::VisitWith,
 };
+use usage::PackageExportedUsage;
 use wax::Glob;
 
+mod usage;
 mod vistor;
 
 #[macro_use]
@@ -34,7 +36,9 @@ pub fn inspect_package_usage(
 ) -> NapiResult<serde_json::Value> {
   let glob = Glob::new(PATTERN).unwrap();
 
-  let map = Arc::new(Mutex::new(HashMap::<String, usize>::new()));
+  // let map = Arc::new(Mutex::new(HashMap::<String, usize>::new()));
+
+  let vec = Arc::new(Mutex::new(Vec::<PackageExportedUsage>::new()));
 
   let entries = glob
     .walk(workspace)
@@ -83,18 +87,23 @@ pub fn inspect_package_usage(
           imports: vec![],
         };
         module_result.visit_with(&mut import_controller);
-        let mut map = map.lock().unwrap();
+        // let mut map = map.lock().unwrap();
+        let mut vec = vec.lock().unwrap();
         for import in import_controller.imports {
-          *map.entry(import).or_insert(0) += 1;
+          vec.push(PackageExportedUsage {
+            file_path: path.display().to_string(),
+            exported_name: import,
+          })
+          // *map.entry(import).or_insert(0) += 1;
         }
       }
       Err(error) => {
-        println!("Error: {:?}", error);
+        println!("Error: {:?} {:?}", error, path);
       }
     }
   });
 
-  let cloned_map = map.lock().unwrap().clone();
+  let vec = vec.lock().unwrap().clone();
 
-  Ok(json!(cloned_map))
+  Ok(json!(vec))
 }
