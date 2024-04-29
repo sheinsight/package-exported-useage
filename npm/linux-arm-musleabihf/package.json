@@ -12,6 +12,12 @@
     "package-exported-usage.linux-arm-musleabihf.node"
   ],
   "license": "MIT",
+  "repository": {
+    "url": "https://github.com/sheinsight/package-exported-useage"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "engines": {
     "node": ">= 10"
   }

@@ -15,6 +15,12 @@
   "engines": {
     "node": ">= 10"
   },
+  "repository": {
+    "url": "https://github.com/sheinsight/package-exported-useage"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "libc": [
     "musl"
   ]

@@ -30,8 +30,6 @@
     "node": ">= 10"
   },
   "repository": {
-
-    "type": "git",
     "url": "https://github.com/sheinsight/package-exported-useage"
   },
   "publishConfig": {

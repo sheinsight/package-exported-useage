@@ -1,3 +1,0 @@
-# `@shined/package-exported-usage-linux-riscv64-gnu`
-
-This is the **riscv64gc-unknown-linux-gnu** binary for `@shined/package-exported-usage`
