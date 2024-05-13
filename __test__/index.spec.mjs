@@ -11,8 +11,13 @@ const __dirname = dirname(__filename);
 
 test('should to be array of len is 4', (t) => {
   const start = performance.now()
-  const res = inspectPackageUsage("shineout",path.join(__dirname,"fixtures"));
+  // let errorCount = 0;
+  const res = inspectPackageUsage("shineout",path.join(__dirname,"fixtures"),(v) => {
+    console.log("--->",v);
+    // errorCount++;
+  });
   const end = performance.now()
   console.log(`inspectPackageUsage cost ${end - start} ms`);
   t.is(res.length, 4);
+  // t.is(errorCount, 1);
 })
