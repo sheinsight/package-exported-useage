@@ -15,5 +15,7 @@ npm i @shined/package-exported-useage
 
 ```javascript
 const { inspectPackageUsage } = require('@shined/package-exported-usage');
-const res = inspectPackageUsage('antd','~/demo-front');
+const res = inspectPackageUsage('antd','~/demo-front',errMessage => {
+    console.log(errMessage)
+});
 ```
