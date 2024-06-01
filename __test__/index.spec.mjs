@@ -83,4 +83,12 @@ test('should to be 1 when use React.createElement', async (t) => {
   const res = await inspectPackageUsage(workspace,["antd"]);
   t.is(res.length, 1);
 })
+
+
+
+test('should to be 1 when use alias', async (t) => {
+  const workspace = path.join(__dirname,"fixtures/demo13");
+  const res = await inspectPackageUsage(workspace,["antd"]);
+  t.is(res.length, 2);
+})
  

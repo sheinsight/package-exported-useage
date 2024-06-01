@@ -44,6 +44,7 @@ impl<'a> Visit<'a> for ImportVisitor<'a> {
       if let Some(specifiers) = &decl.specifiers {
         specifiers.iter().for_each(|specifier| match specifier {
           ImportDeclarationSpecifier::ImportSpecifier(spec) => {
+            println!("{:?}", spec.local.name.to_string());
             self.mapper.insert(
               spec.local.name.to_string(),
               ImportedNameAndNpmLibName {
@@ -145,7 +146,7 @@ impl<'a> Visit<'a> for ImportVisitor<'a> {
         if let Some(v) = self.mapper.get(&name) {
           self.used.push(Location {
             lib_name: v.npm_lib_name.to_string(),
-            member_name: name,
+            member_name: v.imported_name.to_string(),
             start: ident.span.start,
             end: ident.span.end,
             file_path: self.file_path.to_string(),
