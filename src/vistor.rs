@@ -44,7 +44,6 @@ impl<'a> Visit<'a> for ImportVisitor<'a> {
       if let Some(specifiers) = &decl.specifiers {
         specifiers.iter().for_each(|specifier| match specifier {
           ImportDeclarationSpecifier::ImportSpecifier(spec) => {
-            println!("{:?}", spec.local.name.to_string());
             self.mapper.insert(
               spec.local.name.to_string(),
               ImportedNameAndNpmLibName {

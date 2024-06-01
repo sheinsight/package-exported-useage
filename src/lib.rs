@@ -41,21 +41,23 @@ pub async fn inspect_package_usage(
     let entry = entry.map_err(|e| Error::new(napi::Status::GenericFailure, e.to_string()))?;
     let path = entry.path();
 
-    let source_text = read_to_string(&path)?;
+    if path.is_file() {
+      let source_text = read_to_string(&path)?;
 
-    let allocator = Allocator::default();
-    let source_type = SourceType::from_path(&path)
-      .map_err(|e| Error::new(napi::Status::GenericFailure, e.0.to_string()))?;
+      let allocator = Allocator::default();
+      let source_type = SourceType::from_path(&path)
+        .map_err(|e| Error::new(napi::Status::GenericFailure, e.0.to_string()))?;
 
-    let ret = Parser::new(&allocator, &source_text, source_type).parse();
+      let ret = Parser::new(&allocator, &source_text, source_type).parse();
 
-    let mut visitor = ImportVisitor {
-      mapper: HashMap::new(),
-      npm_libs: npm_name_vec.clone(),
-      used: &mut used,
-      file_path: path.to_str().unwrap().to_string(),
-    };
-    visitor.visit_program(&ret.program);
+      let mut visitor = ImportVisitor {
+        mapper: HashMap::new(),
+        npm_libs: npm_name_vec.clone(),
+        used: &mut used,
+        file_path: path.to_str().unwrap().to_string(),
+      };
+      visitor.visit_program(&ret.program);
+    }
   }
 
   Ok(used)

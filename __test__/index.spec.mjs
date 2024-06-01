@@ -86,9 +86,15 @@ test('should to be 1 when use React.createElement', async (t) => {
 
 
 
-test('should to be 1 when use alias', async (t) => {
+test('should to be 2 when use alias', async (t) => {
   const workspace = path.join(__dirname,"fixtures/demo13");
   const res = await inspectPackageUsage(workspace,["antd"]);
   t.is(res.length, 2);
+})
+ 
+test('should to be 4 when directory name end with .ts', async (t) => {
+  const workspace = path.join(__dirname,"fixtures/demo14");
+  const res = await inspectPackageUsage(workspace,["antd"]);
+  t.is(res.length, 4);
 })
  
