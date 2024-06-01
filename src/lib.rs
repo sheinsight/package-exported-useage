@@ -1,29 +1,13 @@
-#![deny(clippy::all)]
+use napi::{Error, Result};
+use oxc_allocator::Allocator;
+use oxc_ast::Visit;
+use oxc_parser::Parser;
+use oxc_span::SourceType;
+use std::collections::HashMap;
+use std::fs::read_to_string;
+use vistor::{ImportVisitor, Location, Options};
 
-use crate::vistor::ImportVisitor;
-use napi::threadsafe_function::{
-  ErrorStrategy, ThreadSafeCallContext, ThreadsafeFunction, ThreadsafeFunctionCallMode,
-};
-use napi::{JsFunction, Result as NapiResult};
-use rayon::prelude::*;
-use serde_json::json;
-use std::{
-  fs::read_to_string,
-  sync::{Arc, Mutex},
-};
-use swc_core::{
-  common::{FileName, SourceMap},
-  ecma::parser::{lexer::Lexer, StringInput, Syntax},
-};
-use swc_ecmascript::{
-  ast::EsVersion,
-  parser::{Parser, TsConfig},
-  visit::VisitWith,
-};
-use usage::PackageExportedUsage;
 use wax::Glob;
-
-mod usage;
 mod vistor;
 
 #[macro_use]
@@ -32,92 +16,47 @@ extern crate napi_derive;
 static PATTERN: &str = "**/*.{js,ts,jsx,tsx}";
 
 #[napi]
-pub fn inspect_package_usage(
-  package_name: String,
+pub async fn inspect_package_usage(
   workspace: String,
-  callback: JsFunction,
-) -> NapiResult<serde_json::Value> {
-  let fns: ThreadsafeFunction<String, ErrorStrategy::Fatal> = callback
-    .create_threadsafe_function(0, |ctx: ThreadSafeCallContext<String>| {
-      ctx.env.create_string(&ctx.value).map(|v| vec![v])
-    })?;
-
+  npm_name_vec: Vec<String>,
+  options: Option<Options>,
+) -> Result<Vec<Location>> {
   let glob = Glob::new(PATTERN).unwrap();
 
-  let vec = Arc::new(Mutex::new(Vec::<PackageExportedUsage>::new()));
+  let mut used: Vec<Location> = Vec::new();
 
-  if let Ok(entries) = glob
+  let ignore_patterns = options
+    .as_ref()
+    .and_then(|opts| opts.ignore.clone())
+    .unwrap_or_else(|| vec!["**/node_modules/**".to_string(), "**/*.d.ts".to_string()]);
+
+  let ignore: Vec<&str> = ignore_patterns.iter().map(String::as_str).collect();
+
+  let entries = glob
     .walk(&workspace)
-    .not(["**/node_modules/**", "**/*.d.ts"])
-  {
-    entries.par_bridge().for_each(|entry| {
-      let e = entry.unwrap();
-      let path = e.path();
+    .not(ignore)
+    .map_err(|e| Error::new(napi::Status::GenericFailure, e.to_string()))?;
 
-      let cm = Arc::<SourceMap>::default();
+  for entry in entries {
+    let entry = entry.map_err(|e| Error::new(napi::Status::GenericFailure, e.to_string()))?;
+    let path = entry.path();
 
-      if let Ok(content) = read_to_string(path) {
-        let fm = cm.new_source_file(FileName::Anon, content);
+    let source_text = read_to_string(&path)?;
 
-        let lexer = Lexer::new(
-          Syntax::Typescript(TsConfig {
-            tsx: true,
-            decorators: true,
-            dts: false,
-            no_early_errors: false,
-            ..Default::default()
-          }),
-          EsVersion::EsNext,
-          StringInput::from(&*fm),
-          None,
-        );
+    let allocator = Allocator::default();
+    let source_type = SourceType::from_path(&path)
+      .map_err(|e| Error::new(napi::Status::GenericFailure, e.0.to_string()))?;
 
-        let mut parser = Parser::new_from(lexer);
+    let ret = Parser::new(&allocator, &source_text, source_type).parse();
 
-        let list_error = parser.take_errors();
-        if list_error.iter().len() > 0 {
-          let err_msg = list_error
-            .iter()
-            .map(|err| err.kind().msg())
-            .collect::<Vec<_>>()
-            .join("");
-          println!("Error: {:?}", err_msg);
-        }
-
-        if let Ok(module_result) = parser.parse_program() {
-          let mut import_controller = ImportVisitor {
-            package_name: package_name.clone(),
-            imports: vec![],
-          };
-          module_result.visit_with(&mut import_controller);
-          let mut vec = vec.lock().unwrap();
-          for import in import_controller.imports {
-            vec.push(PackageExportedUsage {
-              file_path: path.display().to_string(),
-              exported_name: import,
-            })
-          }
-        } else {
-          fns.call(
-            format!("parse file {} fail", path.display()),
-            ThreadsafeFunctionCallMode::Blocking,
-          );
-        }
-      } else {
-        fns.call(
-          format!("read file {} fail", path.display()),
-          ThreadsafeFunctionCallMode::Blocking,
-        );
-      }
-    });
-  } else {
-    fns.call(
-      format!("glob workspace {} fail", &workspace),
-      ThreadsafeFunctionCallMode::Blocking,
-    );
+    let mut visitor = ImportVisitor {
+      mapper: HashMap::new(),
+      npm_libs: npm_name_vec.clone(),
+      used: &mut used,
+      file_path: path.to_str().unwrap().to_string(),
+    };
+    visitor.visit_program(&ret.program);
   }
 
-  let vec = vec.lock().unwrap().clone();
-
-  Ok(json!(vec))
+  Ok(used)
 }

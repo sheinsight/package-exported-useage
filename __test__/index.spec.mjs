@@ -1,5 +1,4 @@
 import test from 'ava'
-import { performance } from 'perf_hooks';
 import { inspectPackageUsage} from '../index.js'
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -9,15 +8,79 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 
-test('should to be array of len is 4', (t) => {
-  const start = performance.now()
-  // let errorCount = 0;
-  const res = inspectPackageUsage("shineout",path.join(__dirname,"fixtures"),(v) => {
-    console.log("--->",v);
-    // errorCount++;
-  });
-  const end = performance.now()
-  console.log(`inspectPackageUsage cost ${end - start} ms`);
-  t.is(res.length, 4);
-  // t.is(errorCount, 1);
+test('should to be 0 when only import', async (t) => {
+  
+  const workspace = path.join(__dirname,"fixtures/demo1");
+  const res = await inspectPackageUsage(workspace,["antd"]);
+  t.is(res.length, 0);
 })
+
+test('should to be 1 when import and use by identity', async (t) => {
+  const workspace = path.join(__dirname,"fixtures/demo2");
+  const res = await inspectPackageUsage(workspace,["antd"]);
+  t.is(res.length, 1);
+})
+
+test('should to be 1 when normal react component', async (t) => {
+  const workspace = path.join(__dirname,"fixtures/demo3");
+  const res = await inspectPackageUsage(workspace,["antd"]);
+  t.is(res.length, 1);
+})
+
+
+test('should to be 1 when selfClosing react component', async (t) => {
+  const workspace = path.join(__dirname,"fixtures/demo4");
+  const res = await inspectPackageUsage(workspace,["antd"]);
+  t.is(res.length, 1);
+})
+
+
+test('should to be 1 when default import normal react component', async (t) => {
+  const workspace = path.join(__dirname,"fixtures/demo5");
+  const res = await inspectPackageUsage(workspace,["antd"]);
+  t.is(res.length, 1);
+})
+
+test('should to be 1 when default import selfClosing react component', async (t) => {
+  const workspace = path.join(__dirname,"fixtures/demo6");
+  const res = await inspectPackageUsage(workspace,["antd"]);
+  t.is(res.length, 1);
+})
+
+test('should to be 1 when namespace import normal react component', async (t) => {
+  const workspace = path.join(__dirname,"fixtures/demo7");
+  const res = await inspectPackageUsage(workspace,["antd"]);
+  t.is(res.length, 1);
+})
+
+test('should to be 1 when namespace import selfClosing react component', async (t) => {
+  const workspace = path.join(__dirname,"fixtures/demo8");
+  const res = await inspectPackageUsage(workspace,["antd"]);
+  t.is(res.length, 1);
+})
+
+test('should to be 2 when 2 libs', async (t) => {
+  const workspace = path.join(__dirname,"fixtures/demo9");
+  const res = await inspectPackageUsage(workspace,["antd","lodash"]);
+  t.is(res.length, 2);
+})
+
+test('should to be 1 when 2 libs but only scan 1 lib', async (t) => {
+  const workspace = path.join(__dirname,"fixtures/demo9");
+  const res = await inspectPackageUsage(workspace,["antd"]);
+  t.is(res.length, 1);
+})
+ 
+test('should to be 1 when 2 libs but no lodash imported', async (t) => {
+  const workspace = path.join(__dirname,"fixtures/demo11");
+  const res = await inspectPackageUsage(workspace,["antd","lodash"]);
+  t.is(res.length, 1);
+})
+ 
+
+test('should to be 1 when use React.createElement', async (t) => {
+  const workspace = path.join(__dirname,"fixtures/demo12");
+  const res = await inspectPackageUsage(workspace,["antd"]);
+  t.is(res.length, 1);
+})
+ 
