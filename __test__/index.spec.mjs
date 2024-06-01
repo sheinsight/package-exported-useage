@@ -97,4 +97,9 @@ test('should to be 4 when directory name end with .ts', async (t) => {
   const res = await inspectPackageUsage(workspace,["antd"]);
   t.is(res.length, 4);
 })
- 
+
+test('should to be 4 when valid UTF-8', async (t) => {
+  const workspace = path.join(__dirname,"fixtures/demo15");
+  const res = await inspectPackageUsage(workspace,["antd"]);
+  t.is(res.length, 0);
+})
