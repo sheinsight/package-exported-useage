@@ -18,6 +18,10 @@
       ]
     }
   },
+  "files": [
+    "index.js",
+    "index.d.ts"
+  ],
   "license": "MIT",
   "devDependencies": {
     "@napi-rs/cli": "^2.18.2",
