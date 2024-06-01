@@ -8,3 +8,5 @@ function A() {
 function B() {
     return <G>xx</G>
 }
+
+G.a;

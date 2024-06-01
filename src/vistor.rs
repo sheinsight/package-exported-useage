@@ -104,7 +104,7 @@ impl<'a> Visit<'a> for ImportVisitor<'a> {
         } else {
           self.used.push(Location {
             lib_name: v.npm_lib_name.to_string(),
-            member_name: name,
+            member_name: v.imported_name.to_string(),
             start: reference.span.start,
             end: reference.span.end,
             file_path: self.file_path.to_string(),
@@ -131,7 +131,7 @@ impl<'a> Visit<'a> for ImportVisitor<'a> {
             } else {
               self.used.push(Location {
                 lib_name: v.npm_lib_name.to_string(),
-                member_name: name,
+                member_name: v.imported_name.to_string(),
                 start: reference.span.start,
                 end: reference.span.end,
                 file_path: self.file_path.to_string(),
